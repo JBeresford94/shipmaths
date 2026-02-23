@@ -43,6 +43,7 @@ def test_parallel(test_latitudes,test_longitudes):
         print(f"{start} to {end} along {parallel_of_latitude} = {parallel_sailing(parallel_of_latitude, start, end)}")
 
 def test_plane():
+    
     pass
 
 def test_great_circle():

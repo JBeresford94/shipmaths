@@ -1,4 +1,5 @@
 import math
+from datetime import datetime, timedelta
 
 def convert_degrees_to_decimals(position):
 
@@ -199,7 +200,6 @@ def composite_great_circle_sailing(latitude_a,
     )
 
     distance_to_limit_nm = 3440.065 * angular_distance_to_limit
-    if distance_to_limit_nm
 
     # Approximate longitude shift using initial course
     delta_longitude_limit = math.degrees(
@@ -249,3 +249,28 @@ def composite_great_circle_sailing(latitude_a,
         "total_distance_nm": round(total_distance, 1)
     }
 
+def get_ETA(distance, speed, departure_time):
+
+    # Convert departure_time into datetime
+    date_string, hour, minute = departure_time
+    departure_datetime = datetime.strptime(date_string, "%d%m%y").replace(hour=hour, minute=minute)
+    
+    # Calculate duration in hours, convert to time delta
+    duration_hours = timedelta(hours=distance / speed)
+
+    # Add to start time for ETA
+    return departure_datetime + duration_hours
+
+def get_speed_for_ETA(distance, departure_time, arrival_time):
+
+    # Convert departure_time into datetime
+    date_string, hour, minute = departure_time
+    departure_datetime = datetime.strptime(date_string, "%d%m%y").replace(hour=hour, minute=minute)
+    # Convert arrival_time into datetime
+    date_string, hour, minute = arrival_time
+    arrival_datetime = datetime.strptime(date_string, "%d%m%y").replace(hour=hour, minute=minute)
+
+    # get time for: speed = distance / time
+    duration_timedelta = (arrival_datetime - departure_datetime)
+    duration = duration_timedelta.total_seconds() / 3600
+    return round(distance/duration,1)
