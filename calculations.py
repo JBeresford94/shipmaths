@@ -3,10 +3,11 @@ from datetime import datetime, timedelta
 
 def convert_degrees_to_decimals(position):
 
-    # Convert degree tuple e.g. (60,30.0) to float e.g. 60.5
-    return position[0] + position[1]/60 \
-    if position[0] > 0 \
-    else position[0] - position[1]/60
+    # Convert degree tuple e.g. (60,30.0) to float e.g. 60.5\
+    if position[0] > 0:
+        return position[0] + position[1]/60
+    else:
+        return position[0] - position[1]/60
 
 def parallel_sailing(latitude, longitude_a, longitude_b):
 
@@ -31,20 +32,22 @@ def parallel_sailing(latitude, longitude_a, longitude_b):
     # Departure (lat must be radians)
     departure = round(dlong_minutes * math.cos(math.radians(latitude)),1)
 
-    valid_sailing = departure <= 600
-    return departure, course, valid_sailing
+    if departure > 600:
+        return 'Plane sailing starts to become inaccurate over 600nm due to curvature\
+ of the earth, suggest using Great Circle formula'
+    return departure,course
 
 
 def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     
     # Convert to decimal degrees
-    latitude_b = convert_degrees_to_decimals(latitude_a)
+    latitude_a = convert_degrees_to_decimals(latitude_a)
     longitude_a = convert_degrees_to_decimals(longitude_a)
-    latitude_b = convert_degrees_to_decimals(latitude_a)
+    latitude_b = convert_degrees_to_decimals(latitude_b)
     longitude_b = convert_degrees_to_decimals(longitude_b)
 
     # Calculate difference in Latitude and Longitude
-    dlat, dlong = (latitude_b - latitude_a), (longitude_b - longitude_a)
+    dlat, dlong = latitude_b - latitude_a, longitude_b - longitude_a
     # factor in E/W crossings and ensure dlong is the 'short way'
     if dlong > 180:
         dlong -= 360
@@ -66,25 +69,30 @@ def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     # Using cosine right triangle rule, calculate Distance: 
     distance = dlat_mins / math.cos(course_rad)
 
+
     # Reformat and return
-    course,distance = round(math.degrees(course_rad),1), abs(round(distance,1))
+    distance,course = abs(round(distance,1)), round(math.degrees(course_rad),1)
     if course < 0:
         course += 360
-    return course,distance if distance < 600 else False
+    if distance > 600:
+        return 'Plane sailing starts to become inaccurate over 600nm due to curvature\
+ of the earth, suggest using Great Circle formula'
+    return distance,course
+
 
 
 def great_circle_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
 
     # Convert to decimal degrees
-    latitude_b = convert_degrees_to_decimals(latitude_a)
+    latitude_a = convert_degrees_to_decimals(latitude_a)
     longitude_a = convert_degrees_to_decimals(longitude_a)
-    latitude_b = convert_degrees_to_decimals(latitude_a)
+    latitude_b = convert_degrees_to_decimals(latitude_b)
     longitude_b = convert_degrees_to_decimals(longitude_b)
 
     # Convert decimals to radians
     latitude_a_rad = math.radians(latitude_a)
-    latitude_b_rad = math.radians(latitude_b)
     longitude_a_rad = math.radians(longitude_a)
+    latitude_b_rad = math.radians(latitude_b)
     longitude_b_rad = math.radians(longitude_b)
 
     # Difference in longitude (delta)
