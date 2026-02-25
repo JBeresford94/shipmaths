@@ -1,20 +1,17 @@
 import math
 from datetime import datetime, timedelta
 
-def convert_degrees_to_decimals(position):
+def convert_degrees_to_decimals(positions):
+    # Convert tuple of positon tuples e.g. ((60,30.0),(170,0.0)) to floats e.g. (60.5,170.0) for every latitude/longitude supplied
 
-    # Convert degree tuple e.g. (60,30.0) to float e.g. 60.5\
-    if position[0] > 0:
-        return position[0] + position[1]/60
-    else:
-        return position[0] - position[1]/60
+    return (position[0] + position[1]/60 if position [0] > 0 \
+            else position[0] - position[1]/60 for \
+            position in positions)
 
 def parallel_sailing(latitude, longitude_a, longitude_b):
 
     # Convert to decimal degrees
-    longitude_a = convert_degrees_to_decimals(longitude_a)
-    longitude_b = convert_degrees_to_decimals(longitude_b)
-    latitude = convert_degrees_to_decimals(latitude)
+    longitude_a, longitude_b, latitude = convert_degrees_to_decimals((longitude_a,longitude_b,latitude))
 
     # factor in E/W crossings and ensure dlong is the 'short way'
     dlong = longitude_b - longitude_a
@@ -41,13 +38,11 @@ def parallel_sailing(latitude, longitude_a, longitude_b):
 def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     
     # Convert to decimal degrees
-    latitude_a = convert_degrees_to_decimals(latitude_a)
-    longitude_a = convert_degrees_to_decimals(longitude_a)
-    latitude_b = convert_degrees_to_decimals(latitude_b)
-    longitude_b = convert_degrees_to_decimals(longitude_b)
+    latitude_a,longitude_a,latitude_b,longitude_b = \
+    convert_degrees_to_decimals((latitude_a,longitude_a,latitude_b,longitude_b))
 
     # Calculate difference in Latitude and Longitude
-    dlat, dlong = latitude_b - latitude_a, longitude_b - longitude_a
+    dlat, dlong = (latitude_b - latitude_a), (longitude_b - longitude_a)
     # factor in E/W crossings and ensure dlong is the 'short way'
     if dlong > 180:
         dlong -= 360
@@ -68,15 +63,14 @@ def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     
     # Using cosine right triangle rule, calculate Distance: 
     distance = dlat_mins / math.cos(course_rad)
-
+    if distance > 600:
+        return 'Plane sailing starts to become inaccurate over 600nm due to curvature\
+ of the earth, suggest using Great Circle formula'
 
     # Reformat and return
     distance,course = abs(round(distance,1)), round(math.degrees(course_rad),1)
     if course < 0:
         course += 360
-    if distance > 600:
-        return 'Plane sailing starts to become inaccurate over 600nm due to curvature\
- of the earth, suggest using Great Circle formula'
     return distance,course
 
 
@@ -84,10 +78,8 @@ def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
 def great_circle_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
 
     # Convert to decimal degrees
-    latitude_a = convert_degrees_to_decimals(latitude_a)
-    longitude_a = convert_degrees_to_decimals(longitude_a)
-    latitude_b = convert_degrees_to_decimals(latitude_b)
-    longitude_b = convert_degrees_to_decimals(longitude_b)
+    latitude_a,longitude_a,latitude_b,longitude_b = \
+    convert_degrees_to_decimals((latitude_a,longitude_a,latitude_b,longitude_b))
 
     # Convert decimals to radians
     latitude_a_rad = math.radians(latitude_a)
@@ -118,7 +110,7 @@ def great_circle_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     angular_distance = math.acos(cosine_angular_distance)
 
     # Convert to nautical miles
-    distance_nm = 3440.065 * angular_distance
+    distance_nm = 3439 * angular_distance
 
     if distance_nm < 600:
         return False
@@ -163,9 +155,6 @@ def composite_great_circle_sailing(latitude_a,
                                    longitude_b,
                                    limiting_latitude):
 
-    # Convert limiting latitude to decimal
-    limiting_latitude_decimal = limiting_latitude[0] + limiting_latitude[1] / 60
-
     # Get full great circle data
     initial_course, final_course, total_gc_distance = great_circle_sailing(
         latitude_a, longitude_a,
@@ -173,9 +162,11 @@ def composite_great_circle_sailing(latitude_a,
         radius_nm
     )
 
-    # Estimate vertex latitude
+    # Convert to decimal degrees, but lat_b not required
+    latitude_start_decimal,longitude_start_decimal, limiting_latitude_decimal,longitude_end_decimal = \
+    convert_degrees_to_decimals((latitude_a,longitude_a,limiting_latitude,longitude_b))
 
-    latitude_start_decimal = latitude_a[0] + latitude_a[1] / 60
+    # Estimate vertex latitude
     latitude_start_rad = math.radians(latitude_start_decimal)
     initial_course_rad = math.radians(initial_course)
 
@@ -183,10 +174,8 @@ def composite_great_circle_sailing(latitude_a,
         abs(math.cos(latitude_start_rad) * math.sin(initial_course_rad))
     )
 
-    vertex_latitude = math.degrees(vertex_latitude_rad)
-
     # If vertex within limit, no composite needed
-    if vertex_latitude <= limiting_latitude_decimal:
+    if math.degrees(vertex_latitude_rad) <= limiting_latitude_decimal:
         return {
             "type": "Great Circle Only",
             "total_distance_nm": total_gc_distance,
@@ -218,10 +207,7 @@ def composite_great_circle_sailing(latitude_a,
     )
 
     # Intersection longitudes
-    longitude_start_decimal = longitude_a[0] + longitude_a[1] / 60
     longitude_limit_1 = longitude_start_decimal + delta_longitude_limit
-
-    longitude_end_decimal = longitude_b[0] + longitude_b[1] / 60
     longitude_limit_2 = longitude_end_decimal - delta_longitude_limit
 
     # Parallel leg

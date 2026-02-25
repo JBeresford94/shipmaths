@@ -14,18 +14,6 @@ def check_positional_ranges(valid_latitudes,valid_longitudes):
     assert min(valid_latitudes[1]) == 0.0 and max(valid_latitudes[1]) == 59.9 
     assert min(valid_longitudes[1]) == 0.0 and max(valid_longitudes[1]) == 59.9
 
-# test ranges, no need to test all combinations
-test_latitudes = list(range(valid_latitudes[0].start, valid_latitudes[0].stop, 10))
-test_longitudes = list(range(valid_longitudes[0].start, valid_longitudes[0].stop, 20))
-
-def get_random_start_end(parallel=False):
-    start_lat = random.choice(test_latitudes),random.choice(minutes), 
-    start_long = random.choice(test_longitudes),random.choice(minutes)
-    end_lat = random.choice(test_latitudes),random.choice(minutes)
-    end_long = random.choice(test_longitudes),random.choice(minutes)
-    return (start_lat,start_long,end_lat,end_long) \
-    if not parallel else (start_lat,start_long,end_long)
-
 def test_parallel():
     """parallel_sailing() returns 3 values:
      1) distance, 2) course, 3) valid_sailing (True/False depending on length, as \
@@ -62,14 +50,30 @@ def test_plane():
     assert go_south_west[1] == 225 # equal degrees s/w should mean a course of 225 
     assert type(go_too_far) == str # should return a warning rather than distance/course
 
-
 def test_great_circle():
-    start_lat,start_long,end_lat,end_long = get_random_start_end()
-    print(f"{start_lat},{start_long} to {end_lat},{end_long} = \
-    {great_circle_sailing(start_lat,start_long,end_lat,end_long)}")
+
+    # check +/-2nm from a textbook answer of 4473
+    test_distance_1 = great_circle_sailing(latitude_a=(35,27.0), longitude_a=(139,39.0), \
+    latitude_b=(37,48.5), longitude_b=(-122,24.0))[2]
+    assert test_distance_1 < 4475 and test_distance_1 > 4471
+
+    # check +/-2nm from a textbook answer of 2908
+    test_distance_2 = great_circle_sailing(latitude_a=(17,18.0), longitude_a=(-25,00.0), \
+    latitude_b=(25,43.0), longitude_b=(-76,36.0))[2]
+    assert test_distance_2 < 2910 and test_distance_2 > 2906
+
+    # check +/-2nm from a textbook answer of 3572
+    test_distance_2 = great_circle_sailing(latitude_a=(-10,25.0), longitude_a=(90,12.0), \
+    latitude_b=(39,27.0), longitude_b=(55,10.0))[2]
+    assert test_distance_2 < 3574 and test_distance_2 > 3570
 
 def test_composite_great_circle():
-    pass
+    """
+    https://www.scribd.com/document/816477581/Composite-Great-Circle-Sailing
+    https://www.scribd.com/document/749028534/1-GC-Composite-Practice-Qus-merged 
+    Vars:
+    latitude_a,longitude_a,latitude_b,longitude_b,limiting_latitude
+    """
 
 def get_ETA():
     "distance, speed, departure_time"
