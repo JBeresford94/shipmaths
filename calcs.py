@@ -84,8 +84,6 @@ def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
         course += 360
     return distance,course
 
-
-
 def great_circle_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     # to refactor more closely along lines of OOW methods, but it works for now...
 
