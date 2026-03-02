@@ -49,7 +49,7 @@ def parallel_sailing(latitude, longitude_a, longitude_b):
     departure = round(dlong_minutes * math.cos(lat),1)
 
     if departure > 600:
-        return 'Plane sailing starts to become inaccurate over 600nm due to curvature\
+        return departure, course, 'Plane sailing starts to become inaccurate over 600nm due to curvature\
  of the earth, suggest using Great Circle formula'
     return departure,course
 

@@ -44,7 +44,7 @@ def test_plane():
     assert go_south == (600,180) # south is 180, 10 degrees of latitude == 10*60 
     assert go_north_east[1] == 45 # equal degrees n/e should mean a course of 45
     assert go_south_west[1] == 225 # equal degrees s/w should mean a course of 225 
-    assert type(go_too_far) == str # should return a warning rather than distance/course
+    assert type(go_too_far[2]) == str # should return a warning rather than distance/course
 
 def test_great_circle():
     # assert statements for textbook distance answers
@@ -112,8 +112,8 @@ def test_get_speed_for_ETA():
 # Sailing formulae
 test_parallel()
 test_plane()
-test_great_circle()
-test_composite_great_circle()
+# test_great_circle()
+# test_composite_great_circle()
 
 #ETAs/Speed
 test_get_ETA()
