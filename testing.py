@@ -1,5 +1,4 @@
 import calcs
-import random
 
 # for later validation and possible use in GUI (1/2)
 minutes = [i / 10 for i in range(600)]
