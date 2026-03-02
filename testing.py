@@ -15,6 +15,25 @@ def check_positional_ranges():
 
 # Start of function testing, all 'live' when testing.py is ran - see the bottom...
 
+def test_get_dlong_or_dlat():
+    # +ve to -ve, could mean either N --> S or E -->W
+    assert calcs.get_dlong_or_dlat((75,17.0),(-25,22.0)) == (-100,39.0)
+    # -ve to +ve, could mean either S --> N or W --> E. Answer should be the same as the other way round
+    assert calcs.get_dlong_or_dlat((-25,22.0),(75,17.0)) == (100,39.0)
+    # +ve to +ve, could mean either N --> N or E --> E. With decimal
+    assert calcs.get_dlong_or_dlat((10,35.0),(8,56.6)) == (-1,38.4)
+    # -ve to -ve, could mean either S --> S or W --> W
+    assert calcs.get_dlong_or_dlat((-75,17.0),(-25,22.0)) == (49,55.0)
+    # big range for dlong, testing if we go the short way around (160, not 200)
+    assert calcs.get_dlong_or_dlat((120,0.0),(-80,0.0)) == (160,0.0)
+    assert calcs.get_dlong_or_dlat((-170,0.0),(170,0.0)) == (-20,0.0)
+    # some textbook examples https://cmgmaritime.com/wp-content/uploads/2018/10/Basic-Navigation-Calculus-2.pdf
+    assert calcs.get_dlong_or_dlat((20,50.0),(45,55.0)) == (25,5.0)
+    assert calcs.get_dlong_or_dlat((10,20.0),(-30,50.0)) == (-41,10.0)
+    assert calcs.get_dlong_or_dlat((175,30.0),(-170,50.0)) == (13,40.0)
+    assert calcs.get_dlong_or_dlat((165,30.0),(148,50.0)) == (-16,40.0)
+    assert calcs.get_dlong_or_dlat((-156,45.0),(168,30.0)) == (-34,45.0)
+
 def test_parallel():
     # 10 mins of longitude along the equator should be 10nm
     assert calcs.parallel_sailing((0,0.0), (0,0.0), (0,10.0))[0] == 10
@@ -44,7 +63,7 @@ def test_plane():
     assert go_south == (600,180) # south is 180, 10 degrees of latitude == 10*60 
     assert go_north_east[1] == 45 # equal degrees n/e should mean a course of 45
     assert go_south_west[1] == 225 # equal degrees s/w should mean a course of 225 
-    assert type(go_too_far[2]) == str # should return a warning rather than distance/course
+    assert type(go_too_far[2]) == str # >600nm should return a warning in addition to distance, course
 
 def test_great_circle():
     # assert statements for textbook distance answers
@@ -112,6 +131,8 @@ def test_get_speed_for_ETA():
 # Sailing formulae
 test_parallel()
 test_plane()
+# test_great_circle()
+# test_composite_great_circle()
 # test_great_circle()
 # test_composite_great_circle()
 
