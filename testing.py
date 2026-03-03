@@ -42,10 +42,8 @@ def test_parallel():
     # the 'short way' will be taken across 0W/0E and ~180E/~180W
     assert calcs.parallel_sailing((0,0.0), (1,0.0), (-1,0.0))[0:2] == (120,270)
     assert calcs.parallel_sailing((0,0.0), (179,30.0), (-179,30.0))[0:2] == (60,90)
-    # should return a warning rather than distance/course
-    assert type(calcs.parallel_sailing((0,0.0), (0,0.0), (10,0.1))) == str
-    # but 600nm exactly is fine
-    assert type(calcs.parallel_sailing((0,0.0), (0,0.0), (10,0.0))) != str
+    # >600nm should return a warning in addition to distance, course
+    assert type(calcs.parallel_sailing((0,0.0), (0,0.0), (10,0.1))[2]) == str
 
 def test_plane():
     go_north = calcs.plane_sailing(latitude_a=(0,0.0), longitude_a=(0,0.0), \
@@ -66,31 +64,33 @@ def test_plane():
     assert type(go_too_far[2]) == str # >600nm should return a warning in addition to distance, course
 
 def test_great_circle():
-    # assert statements for textbook distance answers
+    # assert statements for textbook answers (distance)
 
-    test_distance_1 = calcs.great_circle_sailing(latitude_a=(35,27.0), longitude_a=(139,39.0), \
-    latitude_b=(37,48.5), longitude_b=(-122,24.0))[2]
-    assert test_distance_1 < 4475 and test_distance_1 > 4471
+    # https://oic-nwreviewer.blogspot.com/2014/03/great-circle-sailing.html
+    test_1 = calcs.great_circle_sailing(latitude_a=(35,27.0), longitude_a=(139,39.0), \
+    latitude_b=(37,48.5), longitude_b=(-122,24.0))[0]
+    assert test_1 < 4474 and test_1 > 4472
 
-    test_distance_2 = calcs.great_circle_sailing(latitude_a=(17,18.0), longitude_a=(-25,00.0), \
-    latitude_b=(25,43.0), longitude_b=(-76,36.0))[2]
-    assert test_distance_2 < 2910 and test_distance_2 > 2906
+    test_2 = calcs.great_circle_sailing(latitude_a=(17,18.0), longitude_a=(-25,00.0), \
+    latitude_b=(25,43.0), longitude_b=(-76,36.0))[0]
+    assert test_2 < 2910 and test_2 > 2906
 
-    test_distance_3 = calcs.great_circle_sailing(latitude_a=(-10,25.0), longitude_a=(90,12.0), \
-    latitude_b=(39,27.0), longitude_b=(55,10.0))[2]
-    assert test_distance_3 < 3574 and test_distance_3 > 3570
+    # https://marinegyaan.com/chapter-13-great-circle-sailing/
+    test_3 = calcs.great_circle_sailing(latitude_a=(-10,25.0), longitude_a=(90,12.0), \
+    latitude_b=(39,27.0), longitude_b=(55,10.0))[0]
+    assert test_3 < 3573 and test_3 > 3571
     
-    test_distance_4 = calcs.great_circle_sailing(latitude_a=(50,04.0), longitude_a=(-5,45.0), \
-    latitude_b=(47,34.0), longitude_b=(-52,40.0))[2]
-    assert test_distance_4 < 1831 and test_distance_4 > 1827
+    test_4 = calcs.great_circle_sailing(latitude_a=(50,04.0), longitude_a=(-5,45.0), \
+    latitude_b=(47,34.0), longitude_b=(-52,40.0))[0]
+    assert test_4 < 1830 and test_4 > 1828
 
-    test_distance_5 = calcs.great_circle_sailing(latitude_a=(58,42.0), longitude_a=(-5,00.0), \
-    latitude_b=(32,34.0), longitude_b=(-64,30.0))[2]
-    assert test_distance_5 < 2821.2 and test_distance_5 > 2817.2
+    test_5 = calcs.great_circle_sailing(latitude_a=(58,42.0), longitude_a=(-5,00.0), \
+    latitude_b=(32,34.0), longitude_b=(-64,30.0))[0]
+    assert test_5 < 2820.2 and test_5 > 2818.2
 
-    test_distance_6 = calcs.great_circle_sailing(latitude_a=(49,50.0), longitude_a=(-5,12.0), \
-    latitude_b=(13,6.0), longitude_b=(-59,20.0))[2]
-    assert test_distance_6 < 3435.8 and test_distance_6 > 3431.8
+    test_6 = calcs.great_circle_sailing(latitude_a=(49,50.0), longitude_a=(-5,12.0), \
+    latitude_b=(13,6.0), longitude_b=(-59,20.0))[0]
+    assert test_6 < 3434.8 and test_6 > 3432.8
 
 def test_composite_great_circle():
     """
@@ -131,9 +131,7 @@ def test_get_speed_for_ETA():
 # Sailing formulae
 test_parallel()
 test_plane()
-# test_great_circle()
-# test_composite_great_circle()
-# test_great_circle()
+test_great_circle()
 # test_composite_great_circle()
 
 #ETAs/Speed

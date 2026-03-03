@@ -1,4 +1,4 @@
-import math
+from math import radians, cos, acos, sin, atan2, degrees
 from datetime import datetime, timedelta
 
 def degrees_to_decimals(position):
@@ -32,21 +32,21 @@ def get_dlong_or_dlat(pos_a, pos_b):
     elif dlong_or_dlat_decimal < -180:
         dlong_or_dlat_decimal += 360 
 
-    return decimal_to_degrees(dlong_or_dlat_decimal)
+    return dlong_or_dlat_decimal
 
 def parallel_sailing(latitude, longitude_a, longitude_b):
 
     # get dlong, convert to minutes
     dlong = get_dlong_or_dlat(longitude_a, longitude_b)
-    dlong_minutes = abs(dlong[0])*60 + dlong[1]
+    dlong_minutes = abs(dlong)*60
 
     # Course determined by +ve or -ve dlong
-    course = 90 if dlong[0] > 0 else 270
+    course = 90 if dlong > 0 else 270
 
     # departure = dlong * cos(lat). Note - lat must be radians
     lat_decimal = degrees_to_decimals(latitude)
-    lat = math.radians(lat_decimal)
-    departure = round(dlong_minutes * math.cos(lat),1)
+    lat = radians(lat_decimal)
+    departure = round(dlong_minutes * cos(lat),1)
 
     if departure > 600:
         return departure, course, 'Plane sailing starts to become inaccurate over 600nm due to curvature\
@@ -58,23 +58,23 @@ def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     # get dlong, dlat and convert to minutes
     dlat = get_dlong_or_dlat(latitude_a, latitude_b)
     dlong = get_dlong_or_dlat(longitude_a, longitude_b)
-    dlat_minutes = dlat[0]*60 + dlat[1]
-    dlong_minutes = dlong[0]*60 + dlong[1]
+    dlat_minutes = dlat * 60
+    dlong_minutes = dlong * 60
     
     # Mean latitude
     mean_lat_decimal = degrees_to_decimals(latitude_a) + degrees_to_decimals(latitude_b) / 2
 
     # Departure (distance at parallel of latitude) = dlong * cos(lat)
-    departure = dlong_minutes * math.cos(math.radians(mean_lat_decimal))
+    departure = dlong_minutes * cos(radians(mean_lat_decimal))
    
     # get course ( tan(course) == departure/dlat )
-    course_rad = math.atan2(departure, dlat_minutes)
+    course_rad = atan2(departure, dlat_minutes)
     
     # Distance = dlat / cos(course)
-    distance = dlat_minutes / math.cos(course_rad)
+    distance = dlat_minutes / cos(course_rad)
 
     # Reformat and return
-    distance,course = abs(round(distance,1)), round(math.degrees(course_rad),1)
+    distance,course = abs(round(distance,1)), round(degrees(course_rad),1)
     if course < 0:
         course += 360
     if distance > 600:
@@ -83,80 +83,59 @@ def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     return distance,course
 
 def great_circle_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
-    # to refactor more closely along lines of OOW methods, but it works for now...
-    # https://www.youtube.com/watch?v=6tzQRI_OZ6Q
 
-    # Convert to decimal degrees
-    latitude_a_dec,longitude_a_dec,latitude_b_dec,longitude_b_dec = \
-    convert_degrees_to_decimals((latitude_a,longitude_a,latitude_b,longitude_b))
+    # get pole P to Latitude A/B for PA and PB in spherical triangle
+    lat_a_decimal, lat_b_decimal = degrees_to_decimals(latitude_a),degrees_to_decimals(latitude_b)
+    # if lats named the same, PA, PB are both subtractions from that pole 
+    if lat_a_decimal > 0 and lat_b_decimal > 0 or lat_a_decimal < 0 and lat_b_decimal < 0:
+        pa, pb = 90 - abs(lat_a_decimal), 90 - abs(lat_b_decimal)
+    # otherwise, one is the other side of the equator and this lat must be added
+    else:
+        if abs(lat_a_decimal) > abs(lat_b_decimal):
+            pa = 90 - abs(lat_a_decimal)
+            pb = 90 + abs(lat_b_decimal)
+        else:
+            pa = 90 + abs(lat_a_decimal)
+            pb = 90 - abs(lat_b_decimal)
 
-    # Convert decimals to radians
-    latitude_a_rad = math.radians(latitude_a_dec)
-    longitude_a_rad = math.radians(longitude_a_dec)
-    latitude_b_rad = math.radians(latitude_b_dec)
-    longitude_b_rad = math.radians(longitude_b_dec)
+    # get angle P in spherical triangle, which is dlong
+    p = get_dlong_or_dlat(longitude_a, longitude_b)
 
-    # Difference in longitude (delta)
-    delta_longitude = longitude_b_rad - longitude_a_rad
+    # Cosine rule to get AB, as we have 2 sides PA+PB and angle P (need radians first)
+    p,pa,pb = radians(p),radians(pa),radians(pb)
+    cos_ab = (cos(p) * sin(pa) * sin(pb)) + (cos(pa) * cos(pb))
 
-    # Ensure shortest route
-    if delta_longitude > math.pi:
-        delta_longitude -= 2 * math.pi
-    elif delta_longitude < -math.pi:
-        delta_longitude += 2 * math.pi
+    # convert to ab for angular distance
+    ab_radians = acos(cos_ab)
+    ab = degrees(ab_radians)
+    # Multiply by 60 for the number of miles
+    distance = round(ab * 60,1)
 
-    # Calculate angular distance
-    cosine_angular_distance = (
-        math.sin(latitude_a_rad) * math.sin(latitude_b_rad)
-        + math.cos(latitude_a_rad)
-        * math.cos(latitude_b_rad)
-        * math.cos(delta_longitude)
-    )
+    # Initial course angle a - relative
+    cos_a = (cos(pb) - cos(ab_radians) * cos(pa)) / (sin(ab_radians) * sin(pa))
+    a_radians = acos(cos_a)
+    a = degrees(a_radians)
 
-    # Guard against floating point rounding errors
-    cosine_angular_distance = max(-1, min(1, cosine_angular_distance))
+    # Final course angle b - relative
+    cos_b = (cos(pa) - cos(ab_radians) * cos(pb)) / (sin(ab_radians) * sin(pb))
+    b_radians = acos(cos_b)
+    b = degrees(b_radians)
 
-    angular_distance = math.acos(cosine_angular_distance)
+    def get_true_course(relative_course):
+        """Get true course angle angle by the quadrant (NE,SE,SW,NW), using booleans with dlat and dlong"""
+        north,east = get_dlong_or_dlat(latitude_a, latitude_b) > 0, (get_dlong_or_dlat(longitude_a, longitude_b) > 0) 
+        if north and east:
+            true_course = relative_course
+        if north and not east:
+            true_course = 360 - relative_course
+        if east and not north:
+            true_course = 180 - relative_course
+        else:
+            true_course = 180 + relative_course
 
-    # Convert to nautical miles
-    distance_nm = 3439 * angular_distance
+        return round(true_course)
 
-    if distance_nm < 600:
-        return False
-
-    # Initial course
-    y_component = math.sin(delta_longitude) * math.cos(latitude_b_rad)
-
-    x_component = (
-        math.cos(latitude_a_rad) * math.sin(latitude_b_rad)
-        - math.sin(latitude_a_rad)
-        * math.cos(latitude_b_rad)
-        * math.cos(delta_longitude)
-    )
-
-    initial_course_rad = math.atan2(y_component, x_component)
-    initial_course = math.degrees(initial_course_rad)
-
-    if initial_course < 0:
-        initial_course += 360
-
-    # Final course
-    y_component_final = math.sin(-delta_longitude) * math.cos(latitude_a_rad)
-
-    x_component_final = (
-        math.cos(latitude_b_rad) * math.sin(latitude_a_rad)
-        - math.sin(latitude_b_rad)
-        * math.cos(latitude_a_rad)
-        * math.cos(-delta_longitude)
-    )
-
-    final_course_rad = math.atan2(y_component_final, x_component_final)
-    final_course = math.degrees(final_course_rad)
-
-    if final_course < 0:
-        final_course += 360
-
-    return round(initial_course, 1), round(final_course, 1), round(distance_nm, 1)
+    return distance, get_true_course(a), get_true_course(b)
 
 def composite_great_circle_sailing(latitude_a,
                                    longitude_a,
@@ -165,6 +144,8 @@ def composite_great_circle_sailing(latitude_a,
                                    limiting_latitude):
     pass
     # to rewrite entirely
+    #https://www.youtube.com/watch?v=7OoQDUudU30
+    #https://www.youtube.com/watch?v=leUxaVpwOBY
 
 def get_ETA(distance, speed, departure_time):
     """distance,speed = int or float
