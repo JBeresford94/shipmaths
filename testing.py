@@ -94,8 +94,7 @@ def test_great_circle():
 
 def test_composite_great_circle():
     """
-    TBC, rewrite of function required.
-
+    TBC
     Textbook q and a in:
     https://www.scribd.com/document/749028534/1-GC-Composite-Practice-Qus-merged 
     """
@@ -132,7 +131,7 @@ def test_get_speed_for_ETA():
 test_parallel()
 test_plane()
 test_great_circle()
-# test_composite_great_circle()
+test_composite_great_circle()
 
 #ETAs/Speed
 test_get_ETA()
