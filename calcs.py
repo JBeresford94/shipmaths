@@ -35,13 +35,12 @@ def get_dlong_or_dlat(pos_a, pos_b):
         diff += 360
     return diff
 
-
 # ---------------------------------------------------------------------------
 # Plane / parallel sailing
 # ---------------------------------------------------------------------------
 
-_PLANE_LIMIT   = 600  # nm
-_PLANE_WARNING = (
+_RHUMB_LIMIT   = 600  # nm
+_RHUMB_WARNING = (
     "Plane sailing becomes inaccurate over 600 nm due to earth's curvature; "
     "consider using the Great Circle formula instead."
 )
@@ -53,14 +52,18 @@ def parallel_sailing(latitude, longitude_a, longitude_b):
     dlong_mins = abs(dlong) * 60
     course     = 90 if dlong > 0 else 270
     departure  = round(dlong_mins * cos(radians(degrees_to_decimals(latitude))), 1)
-    if departure > _PLANE_LIMIT:
-        return departure, course, _PLANE_WARNING
+    if departure > _RHUMB_LIMIT:
+        return departure, course, _RHUMB_WARNING
     return departure, course
 
 
 def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
     """Distance (nm) and course (degT) by plane sailing."""
     dlat       = get_dlong_or_dlat(latitude_a,  latitude_b)
+    # Handle equal latitude edge case
+    if dlat == 0:
+        return parallel_sailing(latitude_a, longitude_a, longitude_b)
+
     dlong      = get_dlong_or_dlat(longitude_a, longitude_b)
     dlat_mins  = dlat  * 60
     dlong_mins = dlong * 60
@@ -73,13 +76,14 @@ def plane_sailing(latitude_a, longitude_a, latitude_b, longitude_b):
 
     # Course angle and distance via atan2 + Pythagoras (handles dlat=0 safely)
     course_rad = atan2(departure, dlat_mins)
-    distance   = round(sqrt(dlat_mins**2 + departure**2), 1)
-    course     = round(degrees(course_rad), 1)
+    distance   = dlat_mins / cos(course_rad)
+    distance,course = abs(round(distance,1)), round(degrees(course_rad),1)
+
     if course < 0:
         course += 360
 
-    if distance > _PLANE_LIMIT:
-        return distance, course, _PLANE_WARNING
+    if distance > _RHUMB_LIMIT:
+        return distance, course, _RHUMB_WARNING
     return distance, course
 
 
