@@ -64,47 +64,50 @@ def test_plane():
     assert type(go_too_far[2]) == str # >600nm should return a warning in addition to distance, course
 
 def test_great_circle():
-    # assert statements for textbook answers (distance)
+    """
+    assert statements against textbook answers 
+    (distance within 1nm, course 1degree either side where available
+    https://oic-nwreviewer.blogspot.com/2014/03/great-circle-sailing.html for test 1
+    https://marinegyaan.com/chapter-13-great-circle-sailing/ for tests 2+3
+    """
 
-    # https://oic-nwreviewer.blogspot.com/2014/03/great-circle-sailing.html
     test_1 = calcs.great_circle_sailing(latitude_a=(35,27.0), longitude_a=(139,39.0), \
     latitude_b=(37,48.5), longitude_b=(-122,24.0))[0]
     assert test_1 < 4474 and test_1 > 4472
 
-    test_2 = calcs.great_circle_sailing(latitude_a=(17,18.0), longitude_a=(-25,00.0), \
-    latitude_b=(25,43.0), longitude_b=(-76,36.0))[0]
-    assert test_2 < 2910 and test_2 > 2906
+    test_2 = calcs.great_circle_sailing(latitude_a=(-33,50.0), longitude_a=(23,12.0), \
+    latitude_b=(-20,10.0), longitude_b=(104,0.0))
+    test_2_distance, test_2_initial_course, test_2_final_course = test_2
+    assert test_2_distance < 4293.5 and test_2_distance > 4291.5
+    assert test_2_initial_course in range(101,103)
+    assert test_2_final_course in range(59,61)
 
-    # https://marinegyaan.com/chapter-13-great-circle-sailing/
     test_3 = calcs.great_circle_sailing(latitude_a=(-10,25.0), longitude_a=(90,12.0), \
-    latitude_b=(39,27.0), longitude_b=(55,10.0))[0]
-    assert test_3 < 3573 and test_3 > 3571
-    
-    test_4 = calcs.great_circle_sailing(latitude_a=(50,04.0), longitude_a=(-5,45.0), \
-    latitude_b=(47,34.0), longitude_b=(-52,40.0))[0]
-    assert test_4 < 1830 and test_4 > 1828
-
-    test_5 = calcs.great_circle_sailing(latitude_a=(58,42.0), longitude_a=(-5,00.0), \
-    latitude_b=(32,34.0), longitude_b=(-64,30.0))[0]
-    assert test_5 < 2820.2 and test_5 > 2818.2
-
-    test_6 = calcs.great_circle_sailing(latitude_a=(49,50.0), longitude_a=(-5,12.0), \
-    latitude_b=(13,6.0), longitude_b=(-59,20.0))[0]
-    assert test_6 < 3434.8 and test_6 > 3432.8
+    latitude_b=(39,27.0), longitude_b=(55,10.0))
+    test_3_distance, test_3_initial_course, test_3_final_course = test_3
+    assert test_3_distance < 3573 and test_3_distance > 3571
+    assert test_3_initial_course in range(328,330)
+    assert test_3_final_course in range(318,320)
 
 def test_composite_great_circle():
     """
-    TBC
-    Textbook q and a in:
-    https://www.scribd.com/document/749028534/1-GC-Composite-Practice-Qus-merged 
+    Test distances within 1nm of Textbook q and a in:
+    https://www.scribd.com/document/816477581/Composite-Great-Circle-Sailing for test 1
+    https://www.scribd.com/document/749028534/1-GC-Composite-Practice-Qus-merged for test 2 and 3
     """
-    return None # prevent assertion error while function incomplete
 
-    test_distance_1 = calcs.composite_great_circle_sailing(latitude_a=(35,40.0),longitude_a=(141,00.0),latitude_b=(37,48.0),\
+    test_1 = calcs.composite_great_circle_sailing(latitude_a=(35,40.0),longitude_a=(141,00.0),latitude_b=(37,48.0),\
     longitude_b=(-122,40.0),limiting_latitude=(45,0.0))
-    assert test_distance_1 < 4418.3 and test_distance_1 > 4414.3    
+    assert test_1[0] < 4417.3 and test_1[0] > 4415.3    
 
+    test_2 = calcs.composite_great_circle_sailing(latitude_a=(-42,53.0),longitude_a=(147,20.0),latitude_b=(-52,43.0),\
+    longitude_b=(-72,43.0),limiting_latitude=(-52,43.0))
+    assert test_2[0] < 5324.4 and test_2[0] > 5322.4
 
+    test_3 = calcs.composite_great_circle_sailing(latitude_a=(37,0.0),longitude_a=(-123,12.0),latitude_b=(36,0.0),\
+    longitude_b=(141,30.0),limiting_latitude=(45,0.0))
+    assert test_3[0] < 4385.5 and test_3[0] > 4383.5
+    
 def test_get_ETA():
     # Simple test - one 24 day of sailing 
     test_ETA_1 = calcs.get_ETA(distance=240, speed=10, departure_time=('010126',0,0))

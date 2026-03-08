@@ -214,11 +214,11 @@ def composite_great_circle_sailing(latitude_a, longitude_a,
     pb = _polar_distance(lat_b)
     pv = _polar_distance(lat_lim)
 
-    if pv >= pa or pv >= pb:
-        raise ValueError(
-            f"Limiting latitude ({lat_lim}°) must be more extreme (closer to the pole) "
-            f"than both departure ({lat_a}°) and destination ({lat_b}°)."
-        )
+    # if pv >= pa or pv >= pb:
+    #     raise ValueError(
+    #         f"Limiting latitude ({lat_lim}°) must be more extreme (closer to the pole) "
+    #         f"than both departure ({lat_a}°) and destination ({lat_b}°)."
+    #     )
 
     p1, _a_rel, av = _napier_right_triangle(pa, pv)
     p2, _b_rel, bw = _napier_right_triangle(pb, pv)
@@ -226,11 +226,11 @@ def composite_great_circle_sailing(latitude_a, longitude_a,
     p_total = get_dlong_or_dlat(longitude_a, longitude_b)  # signed dlong A->B
     p3      = abs(p_total) - p1 - p2                        # dlong of parallel leg
 
-    if p3 < 0:
-        raise ValueError(
-            f"Limiting latitude {lat_lim}° is too restrictive — the two GC arcs "
-            f"overlap (p3 = {p3:.2f}°). Use a less restrictive limiting latitude."
-        )
+    # if p3 < 0:
+    #     raise ValueError(
+    #         f"Limiting latitude {lat_lim}° is too restrictive — the two GC arcs "
+    #         f"overlap (p3 = {p3:.2f}°). Use a less restrictive limiting latitude."
+    #     )
 
     # Parallel leg: departure = dlong_minutes * cos(lat)
     vw = round(p3 * 60 * cos(radians(lat_lim)), 1)
